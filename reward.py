@@ -29,11 +29,20 @@ def calculate_heading(current_point: list[float], target_point: list[float]) -> 
     
     return angle
 
+def calculate_area_of_triangle(point1: list[float], point2: list[float], point3: list[float]) -> float:
+    """
+    Given 3 points, calculate the area of a triangle they form using the [shoelace formula](https://wikipedia.org/wiki/Shoelace_formula).
+    """
+    downward_diagonal = point1[0] * point2[1] + point2[0] * point3[1] + point3[0] * point1[1]
+    upward_diagonal = point1[1] * point2[0] + point2[1] * point3[0] + point3[1] * point1[0]
+    return abs(downward_diagonal - upward_diagonal) / 2
+
 def reward_function(params):
     waypoints = params['waypoints']
     closest_waypoints = params['closest_waypoints']
     current_point = [params['x'], params['y']]
     current_heading = params['heading']
+    steering_angle_degrees = params['steering_angle']
 
     # Attempting to cut corners by calculating the midpoint between the next waypoint and 3 points ahead
     target_point = calculate_midpoint(waypoints[closest_waypoints[1]], waypoints[(closest_waypoints[1] + 3) % len(waypoints)])
@@ -50,4 +59,12 @@ def reward_function(params):
     # Handle cases where degrees wrap around (e.g. the target heading is 359 degrees and the current heading is 2 degrees)
     heading_diff = min(heading_diff, 360 - heading_diff)
     # Perhaps, the reward should degrade exponentially to help with precision
-    return (360 - heading_diff) / 360
+    reward = (360 - heading_diff) / 360
+
+    # If points are collinear (lie on a straight line), they do not form an area
+    area = calculate_area_of_triangle(waypoints[closest_waypoints[0]], waypoints[closest_waypoints[1]], waypoints[(closest_waypoints[1] + 3) % len(waypoints)])
+    # Penalise steering on straight passages
+    if (area < 0.01) and (abs(steering_angle_degrees) > 1):
+        reward *= 0.8
+
+    return reward

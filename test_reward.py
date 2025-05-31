@@ -1,5 +1,5 @@
 import unittest
-from reward import calculate_heading
+from reward import calculate_heading, calculate_area_of_triangle
 
 class TestHeadingCalculation(unittest.TestCase):
     def test_east(self):
@@ -30,7 +30,15 @@ class TestHeadingCalculation(unittest.TestCase):
         self.assertAlmostEqual(calculate_heading([1.25, 1.25], [2.25, 1.25]), 0., places=1)
 
     def test_edge_case_when_target_point_equal_to_current_point(self):
-        self.assertRaises(ZeroDivisionError, calculate_heading, [1.25, 1.25], [1.25, 1.25])
+        with self.assertRaises(ZeroDivisionError):
+            calculate_heading([1.25, 1.25], [1.25, 1.25])
+
+class TestAreaOfTriangleCalculation(unittest.TestCase):
+    def test_positive_area(self):
+        self.assertAlmostEqual(calculate_area_of_triangle([1., 2.], [5., 4.], [3., 7.]), 8., places=1)
+    def test_straight_line(self):
+        self.assertAlmostEqual(calculate_area_of_triangle([1., 2.], [2., 4.], [3., 6.]), 0., places=1)
+        self.assertAlmostEqual(calculate_area_of_triangle([-1., -2.], [-2., -4.], [-3., -6.]), 0., places=1)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
